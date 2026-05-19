@@ -55,6 +55,7 @@ class _VeemWebViewState extends State<VeemWebView> {
       'VeemHost',
       onMessageReceived: _handleJsMessage,
     )
+    ..setOnConsoleMessage(_handleConsoleMessage)
     ..setNavigationDelegate(
       NavigationDelegate(
         onPageFinished: (_) {
@@ -124,8 +125,6 @@ class _VeemWebViewState extends State<VeemWebView> {
       'packages/veem_flutter/assets/web/index.html',
     );
 
-    // Encode safely — pluginConfig contains user-supplied strings and we
-    // don't want template injection.
     final injected = <String, String>{
       '{{VEEM_WEBSDK_VERSION}}': _jsonEscape(config.webSdkVersion),
       '{{VEEM_ENV}}': _jsonEscape(config.environment.wireValue),
@@ -140,10 +139,26 @@ class _VeemWebViewState extends State<VeemWebView> {
     return out;
   }
 
-  /// JSON-escape a single string value for safe template substitution.
-  /// Wraps in quotes so the template slot can sit inside a JS expression
-  /// position without further escaping.
   String _jsonEscape(String value) => jsonEncode(value);
+
+  void _handleConsoleMessage(JavaScriptConsoleMessage message) {
+    if (_disposed) return;
+    if (Veem.isInitialized && Veem.config.enableLogging) {
+      developer.log(
+        'webview console [${message.level.name}]: ${message.message}',
+        name: 'veem_flutter',
+      );
+    }
+    if (message.level == JavaScriptLogLevel.error) {
+      widget.onMessage(BridgeMessage(
+        type: 'error',
+        payload: {
+          'code': VeemErrorCode.bridgeError.name,
+          'message': 'WebView console error: ${message.message}',
+        },
+      ),);
+    }
+  }
 
   void _handleJsMessage(JavaScriptMessage message) {
     if (_disposed) return;

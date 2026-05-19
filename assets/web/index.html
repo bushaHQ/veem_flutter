@@ -20,6 +20,12 @@
       box-sizing: border-box;
       padding: 16px;
     }
+    #veem-root > div {
+      height: 100% !important;
+      width: 100% !important;
+      max-width: none !important;
+      min-height: 500px;
+    }
     .veem-bridge-error {
       padding: 24px 16px;
       color: #b6353b;
@@ -213,6 +219,31 @@
         } catch (_) {}
         return out;
       }
+
+      // Surface uncaught errors so the host (Flutter) can see SDK failures
+      // that would otherwise leave a blank page with no signal.
+      window.addEventListener('error', function(ev) {
+        try { console.error('[veem-bridge] window.onerror', ev && ev.message); } catch (_) {}
+        postToFlutter('error', {
+          code: 'bridgeError',
+          message: 'Uncaught JS error: ' + ((ev && ev.message) || 'unknown'),
+          details: ev && ev.filename ? {
+            filename: ev.filename,
+            lineno: ev.lineno,
+            colno: ev.colno
+          } : null
+        });
+      });
+      window.addEventListener('unhandledrejection', function(ev) {
+        var reason = ev && ev.reason;
+        var msg = reason && reason.message ? reason.message : String(reason);
+        try { console.error('[veem-bridge] unhandledrejection', msg); } catch (_) {}
+        postToFlutter('error', {
+          code: 'bridgeError',
+          message: 'Unhandled promise rejection: ' + msg,
+          details: serializeError(reason)
+        });
+      });
 
       // Boot
       log('boot', CONFIG.pluginName, CONFIG.environment);
