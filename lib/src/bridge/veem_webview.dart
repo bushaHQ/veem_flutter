@@ -47,7 +47,36 @@ class VeemWebView extends StatefulWidget {
 }
 
 class _VeemWebViewState extends State<VeemWebView> {
-  late final WebViewController _controller;
+  late final WebViewController _controller = WebViewController()
+    ..setJavaScriptMode(JavaScriptMode.unrestricted)
+    ..setBackgroundColor(const Color(0x00000000))
+    ..addJavaScriptChannel(
+      'VeemHost',
+      onMessageReceived: _handleJsMessage,
+    )
+    ..setNavigationDelegate(
+      NavigationDelegate(
+        onPageFinished: (_) {
+          if (!_disposed && mounted) {
+            setState(() => _isLoading = false);
+          }
+        },
+        onWebResourceError: (error) {
+          if (_disposed) return;
+          widget.onMessage(BridgeMessage(
+            type: 'error',
+            payload: {
+              'code': VeemErrorCode.webviewLoadFailed.name,
+              'message': 'WebView resource error: ${error.description}',
+              'details': {
+                'errorType': error.errorType?.name,
+                'errorCode': error.errorCode,
+              },
+            },
+          ),);
+        },
+      ),
+    );
   bool _isLoading = true;
   bool _disposed = false;
 
@@ -61,38 +90,7 @@ class _VeemWebViewState extends State<VeemWebView> {
     try {
       final config = Veem.config;
       final html = await _buildHtml(config);
-
-      _controller = WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..setBackgroundColor(const Color(0x00000000))
-        ..addJavaScriptChannel(
-          'VeemHost',
-          onMessageReceived: _handleJsMessage,
-        )
-        ..setNavigationDelegate(
-          NavigationDelegate(
-            onPageFinished: (_) {
-              if (!_disposed && mounted) {
-                setState(() => _isLoading = false);
-              }
-            },
-            onWebResourceError: (error) {
-              if (_disposed) return;
-              widget.onMessage(BridgeMessage(
-                type: 'error',
-                payload: {
-                  'code': VeemErrorCode.webviewLoadFailed.name,
-                  'message': 'WebView resource error: ${error.description}',
-                  'details': {
-                    'errorType': error.errorType?.name,
-                    'errorCode': error.errorCode,
-                  },
-                },
-              ),);
-            },
-          ),
-        );
-
+      if (_disposed) return;
       await _controller.loadHtmlString(html, baseUrl: 'https://veem.local/');
     } on VeemError catch (e) {
       widget.onMessage(BridgeMessage(
