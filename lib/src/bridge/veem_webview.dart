@@ -5,6 +5,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../core/config.dart';
 import '../core/errors.dart';
@@ -91,6 +92,12 @@ class _VeemWebViewState extends State<VeemWebView> {
       final config = Veem.config;
       final html = await _buildHtml(config);
       if (_disposed) return;
+      if (config.enableWebViewDebugging) {
+        final platform = _controller.platform;
+        if (platform is WebKitWebViewController) {
+          await platform.setInspectable(true);
+        }
+      }
       await _controller.loadHtmlString(html, baseUrl: 'https://veem.local/');
     } on VeemError catch (e) {
       widget.onMessage(BridgeMessage(

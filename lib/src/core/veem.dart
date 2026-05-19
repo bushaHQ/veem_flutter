@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 import '../plugins/card/card_api.dart';
 import 'config.dart';
@@ -37,6 +38,10 @@ class Veem {
   /// and for swapping environments at runtime.
   static Future<void> initialize(VeemConfig config) async {
     _config = config;
+    if (config.enableWebViewDebugging &&
+        defaultTargetPlatform == TargetPlatform.android) {
+      await AndroidWebViewController.enableDebugging(true);
+    }
   }
 
   /// Card plugin namespace.

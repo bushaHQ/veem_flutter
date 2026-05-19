@@ -14,6 +14,7 @@ void main() async {
       environment: VeemEnvironment.sandbox,
       clientId: 'YOUR_VEEM_CLIENT_ID',
       enableLogging: true,
+      enableWebViewDebugging: true,
     ),
   );
 

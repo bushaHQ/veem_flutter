@@ -26,6 +26,7 @@ class VeemConfig {
     required this.clientId,
     this.webSdkVersion = '0',
     this.enableLogging = false,
+    this.enableWebViewDebugging = false,
   });
 
   /// Whether to target sandbox or production.
@@ -46,4 +47,19 @@ class VeemConfig {
   /// Emit debug logging for bridge events. Off by default. Never logs card
   /// data or session secrets; only structural events.
   final bool enableLogging;
+
+  /// Make the underlying WebView inspectable from Safari Web Inspector
+  /// (iOS/macOS, requires iOS 16.4+) and Chrome DevTools at
+  /// `chrome://inspect` (Android).
+  ///
+  /// Off by default. Recommended pattern is to gate on `kDebugMode` so the
+  /// inspector never ships in release builds:
+  ///
+  /// ```dart
+  /// VeemConfig(
+  ///   ...,
+  ///   enableWebViewDebugging: kDebugMode,
+  /// )
+  /// ```
+  final bool enableWebViewDebugging;
 }
