@@ -32,17 +32,9 @@
   <div id="veem-root"></div>
 
   <script>
-    /* ====================================================================
+    /*
      * Veem Flutter SDK — WebView bridge
-     *
-     * This page is bundled inside the veem_flutter package and loaded into
-     * a Flutter WebView. It:
-     *   1. Reads injected config (substituted by Flutter at load time)
-     *   2. Loads the Veem Web SDK from unpkg.com
-     *   3. Instantiates Veem.WebSDK with the right plugin name + config
-     *   4. Forwards onComplete / onExit / onError back to Flutter via the
-     *      VeemHost JavaScriptChannel
-     *
+     * This page is loaded into a WebView by the Veem Flutter SDK when a plugin is presented.
      * Template slots replaced by Dart (see VeemWebView._buildHtml):
      *   {{VEEM_WEBSDK_VERSION}}  -> "0" or "0.x.y"
      *   {{VEEM_ENV}}             -> "sandbox" | "production"
@@ -50,7 +42,11 @@
      *   {{VEEM_PLUGIN_NAME}}     -> "collectAccountInformation" | ...
      *   {{VEEM_PLUGIN_CONFIG}}   -> { referenceId, preset?, configuration }
      *   {{VEEM_ENABLE_LOGGING}}  -> true | false
-     * ====================================================================
+     * Note: the Web SDK version is pinned to a specific major version (e.g. "0") 
+     * to allow patch updates without needing to update the Flutter package. 
+     * The bridge should be compatible with any 0.x.y version of the Web SDK, 
+     * but if there are breaking changes in a future major version then the Flutter package will need to be updated 
+     * to specify the new major version and accommodate any breaking changes in the bridge code.
      */
 
     (function() {
