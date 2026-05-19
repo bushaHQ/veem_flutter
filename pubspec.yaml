@@ -1,0 +1,27 @@
+name: veem_flutter
+description: >-
+  Flutter SDK for Veem Global Payments. v1 wraps the Veem Web SDK in a WebView
+  and exposes native Flutter widgets and an imperative API. Currently covers
+  the Card plugin; Bank, Payee, BOI, Plaid and Identity Check are planned.
+version: 0.1.0
+homepage: https://github.com/your-org/veem_flutter
+repository: https://github.com/your-org/veem_flutter
+issue_tracker: https://github.com/your-org/veem_flutter/issues
+
+environment:
+  sdk: ">=3.8.0 <4.0.0"
+  flutter: ">=3.19.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  webview_flutter: ^4.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  assets:
+    - assets/web/index.html
