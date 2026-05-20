@@ -8,9 +8,9 @@ enum VeemEnvironment {
 
   /// The string the Web SDK expects.
   String get wireValue => switch (this) {
-        VeemEnvironment.sandbox => 'sandbox',
-        VeemEnvironment.production => 'production',
-      };
+    VeemEnvironment.sandbox => 'sandbox',
+    VeemEnvironment.production => 'production',
+  };
 }
 
 /// Global configuration for the Veem SDK.

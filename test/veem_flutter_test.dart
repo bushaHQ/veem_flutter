@@ -21,10 +21,12 @@ void main() {
     });
 
     test('isInitialized is true after init', () async {
-      await Veem.initialize(const VeemConfig(
-        environment: VeemEnvironment.sandbox,
-        clientId: 'test-client',
-      ),);
+      await Veem.initialize(
+        const VeemConfig(
+          environment: VeemEnvironment.sandbox,
+          clientId: 'test-client',
+        ),
+      );
       expect(Veem.isInitialized, isTrue);
       expect(Veem.config.environment, VeemEnvironment.sandbox);
       expect(Veem.config.clientId, 'test-client');
@@ -53,12 +55,9 @@ void main() {
       expect(json['referenceId'], 'ref_abc');
       expect(json['configuration']['accountId'], 391558);
       expect(json['configuration']['sessionSecret'], 'secret123');
-      expect(
-        json['configuration']['paymentOptions'],
-        [
-          {'type': 'Card'},
-        ],
-      );
+      expect(json['configuration']['paymentOptions'], [
+        {'type': 'Card'},
+      ]);
     });
 
     test('includes preset when provided', () {
@@ -82,12 +81,9 @@ void main() {
       );
 
       final json = config.toJson();
-      expect(
-        json['configuration']['paymentOptions'],
-        [
-          {'type': 'Card', 'header': 'Pay with card'},
-        ],
-      );
+      expect(json['configuration']['paymentOptions'], [
+        {'type': 'Card', 'header': 'Pay with card'},
+      ]);
     });
 
     test('includes style when provided', () {
@@ -95,7 +91,9 @@ void main() {
         accountId: 1,
         sessionSecret: 's',
         referenceId: 'r',
-        style: {'button': {'color': '#fff'}},
+        style: {
+          'button': {'color': '#fff'},
+        },
       );
 
       final json = config.toJson();

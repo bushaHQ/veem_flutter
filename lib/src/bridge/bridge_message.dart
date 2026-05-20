@@ -11,8 +11,7 @@ class BridgeMessage {
   factory BridgeMessage.fromJson(Map<String, dynamic> json) {
     return BridgeMessage(
       type: (json['type'] as String?) ?? 'unknown',
-      payload:
-          (json['payload'] as Map?)?.cast<String, dynamic>() ?? const {},
+      payload: (json['payload'] as Map?)?.cast<String, dynamic>() ?? const {},
     );
   }
 

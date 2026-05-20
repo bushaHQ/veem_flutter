@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Veem</title>
   <style>
-    html, body {
+    html,
+    body {
       margin: 0;
       padding: 0;
       height: 100%;
@@ -14,18 +16,21 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       -webkit-text-size-adjust: 100%;
     }
+
     #veem-root {
       width: 100%;
       min-height: 100%;
       box-sizing: border-box;
       padding: 16px;
     }
-    #veem-root > div {
+
+    #veem-root>div {
       height: 100% !important;
       width: 100% !important;
       max-width: none !important;
       min-height: 500px;
     }
+
     .veem-bridge-error {
       padding: 24px 16px;
       color: #b6353b;
@@ -34,6 +39,7 @@
     }
   </style>
 </head>
+
 <body>
   <div id="veem-root"></div>
 
@@ -55,200 +61,199 @@
      * to specify the new major version and accommodate any breaking changes in the bridge code.
      */
 
-    (function() {
+    (function () {
       'use strict';
 
       var CONFIG = {
-        sdkVersion: {{VEEM_WEBSDK_VERSION}},
-        environment: {{VEEM_ENV}},
-        clientId: {{VEEM_CLIENT_ID}},
-        pluginName: {{VEEM_PLUGIN_NAME}},
-        pluginConfig: {{VEEM_PLUGIN_CONFIG}},
-        enableLogging: {{VEEM_ENABLE_LOGGING}}
+        sdkVersion: {{ VEEM_WEBSDK_VERSION }
+    },
+      environment: { { VEEM_ENV } },
+    clientId: { { VEEM_CLIENT_ID } },
+    pluginName: { { VEEM_PLUGIN_NAME } },
+    pluginConfig: { { VEEM_PLUGIN_CONFIG } },
+    enableLogging: { { VEEM_ENABLE_LOGGING } }
       };
 
-      function log() {
-        if (!CONFIG.enableLogging) return;
-        try {
-          var args = Array.prototype.slice.call(arguments);
-          console.log.apply(console, ['[veem-bridge]'].concat(args));
-        } catch (_) { /* ignore */ }
-      }
+    function log() {
+      if (!CONFIG.enableLogging) return;
+      try {
+        var args = Array.prototype.slice.call(arguments);
+        console.log.apply(console, ['[veem-bridge]'].concat(args));
+      } catch (_) { /* ignore */ }
+    }
 
-      function postToFlutter(type, payload) {
-        try {
-          if (window.VeemHost && typeof window.VeemHost.postMessage === 'function') {
-            window.VeemHost.postMessage(JSON.stringify({
-              type: type,
-              payload: payload || {}
-            }));
-          } else {
-            log('VeemHost channel not available; dropping event', type);
-          }
-        } catch (e) {
-          // Avoid throwing out of the bridge — the WebView is the only
-          // observer and there's nowhere useful to surface this.
-          try { console.error('[veem-bridge] post failed', e); } catch (_) {}
+    function postToFlutter(type, payload) {
+      try {
+        if (window.VeemHost && typeof window.VeemHost.postMessage === 'function') {
+          window.VeemHost.postMessage(JSON.stringify({
+            type: type,
+            payload: payload || {}
+          }));
+        } else {
+          log('VeemHost channel not available; dropping event', type);
         }
+      } catch (e) {
+        // Avoid throwing out of the bridge — the WebView is the only
+        // observer and there's nowhere useful to surface this.
+        try { console.error('[veem-bridge] post failed', e); } catch (_) { }
       }
+    }
 
-      function showInlineError(message) {
-        var root = document.getElementById('veem-root');
-        if (!root) return;
-        var div = document.createElement('div');
-        div.className = 'veem-bridge-error';
-        div.textContent = message;
-        root.innerHTML = '';
-        root.appendChild(div);
+    function showInlineError(message) {
+      var root = document.getElementById('veem-root');
+      if (!root) return;
+      var div = document.createElement('div');
+      div.className = 'veem-bridge-error';
+      div.textContent = message;
+      root.innerHTML = '';
+      root.appendChild(div);
+    }
+
+    function loadSdk(onReady) {
+      var script = document.createElement('script');
+      script.src = 'https://unpkg.com/veem-web-sdk@' + CONFIG.sdkVersion + '/umd/index.min.js';
+      script.async = false;
+      script.onload = function () {
+        log('Web SDK loaded');
+        onReady();
+      };
+      script.onerror = function () {
+        var msg = 'Failed to load Veem Web SDK from unpkg (version "' +
+          CONFIG.sdkVersion + '"). Check device network connectivity.';
+        showInlineError(msg);
+        postToFlutter('error', {
+          code: 'networkError',
+          message: msg
+        });
+      };
+      document.head.appendChild(script);
+    }
+
+    function resolveSdkGlobal() {
+      // The Veem Web SDK docs use `new Veem.WebSDK(...)`, so we expect
+      // a `Veem` global with a `WebSDK` constructor.
+      if (typeof window.Veem !== 'undefined' &&
+        typeof window.Veem.WebSDK === 'function') {
+        return window.Veem.WebSDK;
       }
+      return null;
+    }
 
-      function loadSdk(onReady) {
-        var script = document.createElement('script');
-        script.src = 'https://unpkg.com/veem-web-sdk@' + CONFIG.sdkVersion + '/umd/index.min.js';
-        script.async = false;
-        script.onload = function() {
-          log('Web SDK loaded');
-          onReady();
-        };
-        script.onerror = function() {
-          var msg = 'Failed to load Veem Web SDK from unpkg (version "' +
-                    CONFIG.sdkVersion + '"). Check device network connectivity.';
-          showInlineError(msg);
-          postToFlutter('error', {
-            code: 'networkError',
-            message: msg
-          });
-        };
-        document.head.appendChild(script);
-      }
-
-      function resolveSdkGlobal() {
-        // The Veem Web SDK docs use `new Veem.WebSDK(...)`, so we expect
-        // a `Veem` global with a `WebSDK` constructor.
-        if (typeof window.Veem !== 'undefined' &&
-            typeof window.Veem.WebSDK === 'function') {
-          return window.Veem.WebSDK;
-        }
-        return null;
-      }
-
-      function mountPlugin() {
-        var SdkCtor = resolveSdkGlobal();
-        if (!SdkCtor) {
-          var msg = 'Veem Web SDK loaded but window.Veem.WebSDK is not a constructor. ' +
-                    'The Web SDK version may have an incompatible export shape.';
-          showInlineError(msg);
-          postToFlutter('error', {
-            code: 'bridgeError',
-            message: msg
-          });
-          return;
-        }
-
-        // Merge clientId (from VeemConfig) into the per-plugin
-        // configuration. The Dart side intentionally doesn't know clientId
-        // when building the plugin config — we attach it here.
-        var pluginCfg = CONFIG.pluginConfig || {};
-        var configuration = Object.assign(
-          {},
-          pluginCfg.configuration || {},
-          { clientId: CONFIG.clientId }
-        );
-
-        var args = {
-          name: CONFIG.pluginName,
-          environment: CONFIG.environment,
-          target: '#veem-root',
-          referenceId: pluginCfg.referenceId,
-          configuration: configuration,
-          onComplete: function(payload) {
-            log('onComplete', payload);
-            postToFlutter('complete', payload || {});
-          },
-          onExit: function() {
-            log('onExit');
-            postToFlutter('exit', {});
-          },
-          onError: function(err) {
-            log('onError', err);
-            postToFlutter('error', {
-              code: 'pluginError',
-              message: (err && (err.message || err.toString())) || 'Card plugin error',
-              details: serializeError(err)
-            });
-          }
-        };
-
-        if (pluginCfg.preset) {
-          args.preset = pluginCfg.preset;
-        }
-
-        try {
-          // Signal that the plugin is mounting. The actual ready state
-          // (Web SDK fully rendered) isn't surfaced by the Web SDK in v1
-          // — Flutter treats page load as ready.
-          postToFlutter('ready', {});
-          // eslint-disable-next-line no-new
-          new SdkCtor(args);
-        } catch (e) {
-          var failureMsg = 'Failed to instantiate Veem Web SDK: ' +
-                           (e && e.message ? e.message : String(e));
-          showInlineError(failureMsg);
-          postToFlutter('error', {
-            code: 'bridgeError',
-            message: failureMsg,
-            details: serializeError(e)
-          });
-        }
-      }
-
-      function serializeError(err) {
-        if (!err) return null;
-        if (typeof err === 'string') return { message: err };
-        var out = {};
-        try {
-          if (err.message) out.message = err.message;
-          if (err.name) out.name = err.name;
-          if (err.code) out.code = err.code;
-          // Pull through any own enumerable props the Web SDK attaches.
-          for (var k in err) {
-            if (Object.prototype.hasOwnProperty.call(err, k) && !(k in out)) {
-              try { out[k] = err[k]; } catch (_) {}
-            }
-          }
-        } catch (_) {}
-        return out;
-      }
-
-      // Surface uncaught errors so the host (Flutter) can see SDK failures
-      // that would otherwise leave a blank page with no signal.
-      window.addEventListener('error', function(ev) {
-        try { console.error('[veem-bridge] window.onerror', ev && ev.message); } catch (_) {}
+    function mountPlugin() {
+      var SdkCtor = resolveSdkGlobal();
+      if (!SdkCtor) {
+        var msg = 'Veem Web SDK loaded but window.Veem.WebSDK is not a constructor. ' +
+          'The Web SDK version may have an incompatible export shape.';
+        showInlineError(msg);
         postToFlutter('error', {
           code: 'bridgeError',
-          message: 'Uncaught JS error: ' + ((ev && ev.message) || 'unknown'),
-          details: ev && ev.filename ? {
-            filename: ev.filename,
-            lineno: ev.lineno,
-            colno: ev.colno
-          } : null
+          message: msg
         });
-      });
-      window.addEventListener('unhandledrejection', function(ev) {
-        var reason = ev && ev.reason;
-        var msg = reason && reason.message ? reason.message : String(reason);
-        try { console.error('[veem-bridge] unhandledrejection', msg); } catch (_) {}
+        return;
+      }
+
+      var pluginCfg = CONFIG.pluginConfig || {};
+      var configuration = Object.assign(
+        {},
+        pluginCfg.configuration || {},
+        { clientId: CONFIG.clientId }
+      );
+
+      var args = {
+        name: CONFIG.pluginName,
+        environment: CONFIG.environment,
+        target: '#veem-root',
+        referenceId: pluginCfg.referenceId,
+        configuration: configuration,
+        onComplete: function (payload) {
+          log('onComplete', payload);
+          postToFlutter('complete', payload || {});
+        },
+        onExit: function () {
+          log('onExit');
+          postToFlutter('exit', {});
+        },
+        onError: function (err) {
+          log('onError', err);
+          postToFlutter('error', {
+            code: 'pluginError',
+            message: (err && (err.message || err.toString())) || 'Card plugin error',
+            details: serializeError(err)
+          });
+        }
+      };
+
+      if (pluginCfg.preset) {
+        args.preset = pluginCfg.preset;
+      }
+
+      try {
+        // Signal that the plugin is mounting. The actual ready state
+        // (Web SDK fully rendered) isn't surfaced by the Web SDK in v1
+        // — Flutter treats page load as ready.
+        postToFlutter('ready', {});
+        // eslint-disable-next-line no-new
+        new SdkCtor(args);
+      } catch (e) {
+        var failureMsg = 'Failed to instantiate Veem Web SDK: ' +
+          (e && e.message ? e.message : String(e));
+        showInlineError(failureMsg);
         postToFlutter('error', {
           code: 'bridgeError',
-          message: 'Unhandled promise rejection: ' + msg,
-          details: serializeError(reason)
+          message: failureMsg,
+          details: serializeError(e)
         });
-      });
+      }
+    }
 
-      // Boot
-      log('boot', CONFIG.pluginName, CONFIG.environment);
-      loadSdk(mountPlugin);
-    })();
+    function serializeError(err) {
+      if (!err) return null;
+      if (typeof err === 'string') return { message: err };
+      var out = {};
+      try {
+        if (err.message) out.message = err.message;
+        if (err.name) out.name = err.name;
+        if (err.code) out.code = err.code;
+        // Pull through any own enumerable props the Web SDK attaches.
+        for (var k in err) {
+          if (Object.prototype.hasOwnProperty.call(err, k) && !(k in out)) {
+            try { out[k] = err[k]; } catch (_) { }
+          }
+        }
+      } catch (_) { }
+      return out;
+    }
+
+    // Surface uncaught errors so the host (Flutter) can see SDK failures
+    // that would otherwise leave a blank page with no signal.
+    window.addEventListener('error', function (ev) {
+      try { console.error('[veem-bridge] window.onerror', ev && ev.message); } catch (_) { }
+      postToFlutter('error', {
+        code: 'bridgeError',
+        message: 'Uncaught JS error: ' + ((ev && ev.message) || 'unknown'),
+        details: ev && ev.filename ? {
+          filename: ev.filename,
+          lineno: ev.lineno,
+          colno: ev.colno
+        } : null
+      });
+    });
+    window.addEventListener('unhandledrejection', function (ev) {
+      var reason = ev && ev.reason;
+      var msg = reason && reason.message ? reason.message : String(reason);
+      try { console.error('[veem-bridge] unhandledrejection', msg); } catch (_) { }
+      postToFlutter('error', {
+        code: 'bridgeError',
+        message: 'Unhandled promise rejection: ' + msg,
+        details: serializeError(reason)
+      });
+    });
+
+    // Boot
+    log('boot', CONFIG.pluginName, CONFIG.environment);
+    loadSdk(mountPlugin);
+    }) ();
   </script>
 </body>
+
 </html>

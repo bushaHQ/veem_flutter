@@ -12,11 +12,11 @@ CDN, and PCI scope stays with Veem.
 | Plugin                          | v1 | Notes |
 |---------------------------------|----|-------|
 | Card                            | ✅ | This release. |
-| Bank                            | ⏳ | Planned. |
-| Payee                           | ⏳ | Planned. |
-| Beneficial Ownership Info       | ⏳ | Planned. |
-| Plaid                           | ⏳ | Planned. Bank OAuth redirects in WebView need attention. |
-| Identity Check                  | ⏳ | Planned. Requires camera permissions plumbing. |
+| Bank                            | ⏳ | Undertermined. |
+| Payee                           | ⏳ | Undertermined. |
+| Beneficial Ownership Info       | ⏳ | Undertermined. |
+| Plaid                           | ⏳ | Undertermined. Bank OAuth redirects in WebView need attention. |
+| Identity Check                  | ⏳ | Undertermined. Requires camera permissions plumbing. |
 
 ## Install
 
@@ -102,7 +102,7 @@ VeemCardPlugin(
 
 ### 4. Custom styling
 
-For v1, pass Veem's style structure directly as a map:
+Pass Veem's style structure directly as a map:
 
 ```dart
 CardPluginConfig(
@@ -176,7 +176,7 @@ the next time a user opens the plugin.
 
 ## Known limitations
 
-- **Card plugin only in v1.** Bank, Payee, BOI, Plaid, Identity Check coming
+- **Card plugin only available.** Bank, Payee, BOI, Plaid, Identity Check coming
   in subsequent releases.
 - **Style API is untyped.** You pass the raw Veem style map. Typed builder
   planned.

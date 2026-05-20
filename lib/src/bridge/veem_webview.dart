@@ -51,10 +51,7 @@ class _VeemWebViewState extends State<VeemWebView> {
   late final WebViewController _controller = WebViewController()
     ..setJavaScriptMode(JavaScriptMode.unrestricted)
     ..setBackgroundColor(const Color(0x00000000))
-    ..addJavaScriptChannel(
-      'VeemHost',
-      onMessageReceived: _handleJsMessage,
-    )
+    ..addJavaScriptChannel('VeemHost', onMessageReceived: _handleJsMessage)
     ..setOnConsoleMessage(_handleConsoleMessage)
     ..setNavigationDelegate(
       NavigationDelegate(
@@ -65,17 +62,19 @@ class _VeemWebViewState extends State<VeemWebView> {
         },
         onWebResourceError: (error) {
           if (_disposed) return;
-          widget.onMessage(BridgeMessage(
-            type: 'error',
-            payload: {
-              'code': VeemErrorCode.webviewLoadFailed.name,
-              'message': 'WebView resource error: ${error.description}',
-              'details': {
-                'errorType': error.errorType?.name,
-                'errorCode': error.errorCode,
+          widget.onMessage(
+            BridgeMessage(
+              type: 'error',
+              payload: {
+                'code': VeemErrorCode.webviewLoadFailed.name,
+                'message': 'WebView resource error: ${error.description}',
+                'details': {
+                  'errorType': error.errorType?.name,
+                  'errorCode': error.errorCode,
+                },
               },
-            },
-          ),);
+            ),
+          );
         },
       ),
     );
@@ -101,22 +100,23 @@ class _VeemWebViewState extends State<VeemWebView> {
       }
       await _controller.loadHtmlString(html, baseUrl: 'https://veem.local/');
     } on VeemError catch (e) {
-      widget.onMessage(BridgeMessage(
-        type: 'error',
-        payload: {
-          'code': e.code.name,
-          'message': e.message,
-        },
-      ),);
+      widget.onMessage(
+        BridgeMessage(
+          type: 'error',
+          payload: {'code': e.code.name, 'message': e.message},
+        ),
+      );
     } catch (e, st) {
-      widget.onMessage(BridgeMessage(
-        type: 'error',
-        payload: {
-          'code': VeemErrorCode.webviewLoadFailed.name,
-          'message': 'Failed to initialize WebView: $e',
-          'details': {'stackTrace': st.toString()},
-        },
-      ),);
+      widget.onMessage(
+        BridgeMessage(
+          type: 'error',
+          payload: {
+            'code': VeemErrorCode.webviewLoadFailed.name,
+            'message': 'Failed to initialize WebView: $e',
+            'details': {'stackTrace': st.toString()},
+          },
+        ),
+      );
     }
   }
 
@@ -150,13 +150,15 @@ class _VeemWebViewState extends State<VeemWebView> {
       );
     }
     if (message.level == JavaScriptLogLevel.error) {
-      widget.onMessage(BridgeMessage(
-        type: 'error',
-        payload: {
-          'code': VeemErrorCode.bridgeError.name,
-          'message': 'WebView console error: ${message.message}',
-        },
-      ),);
+      widget.onMessage(
+        BridgeMessage(
+          type: 'error',
+          payload: {
+            'code': VeemErrorCode.bridgeError.name,
+            'message': 'WebView console error: ${message.message}',
+          },
+        ),
+      );
     }
   }
 
@@ -166,20 +168,19 @@ class _VeemWebViewState extends State<VeemWebView> {
       final json = jsonDecode(message.message) as Map<String, dynamic>;
       final bridge = BridgeMessage.fromJson(json);
       if (Veem.isInitialized && Veem.config.enableLogging) {
-        developer.log(
-          'bridge: ${bridge.type}',
-          name: 'veem_flutter',
-        );
+        developer.log('bridge: ${bridge.type}', name: 'veem_flutter');
       }
       widget.onMessage(bridge);
     } catch (e) {
-      widget.onMessage(BridgeMessage(
-        type: 'error',
-        payload: {
-          'code': VeemErrorCode.bridgeError.name,
-          'message': 'Failed to parse bridge message: $e',
-        },
-      ),);
+      widget.onMessage(
+        BridgeMessage(
+          type: 'error',
+          payload: {
+            'code': VeemErrorCode.bridgeError.name,
+            'message': 'Failed to parse bridge message: $e',
+          },
+        ),
+      );
     }
   }
 
@@ -198,7 +199,8 @@ class _VeemWebViewState extends State<VeemWebView> {
           Positioned.fill(
             child: ColoredBox(
               color: Theme.of(context).scaffoldBackgroundColor,
-              child: widget.loadingBuilder ??
+              child:
+                  widget.loadingBuilder ??
                   const Center(child: CircularProgressIndicator()),
             ),
           ),

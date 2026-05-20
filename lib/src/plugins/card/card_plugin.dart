@@ -94,7 +94,8 @@ class _VeemCardPluginState extends State<VeemCardPlugin> {
         widget.onReady?.call();
       case 'complete':
         final completed = CardPluginCompleted(
-          referenceId: (message.payload['referenceId'] as String?) ??
+          referenceId:
+              (message.payload['referenceId'] as String?) ??
               widget.config.referenceId,
           preset: (message.payload['preset'] as Map?)?.cast<String, dynamic>(),
           userInputs: UserInputs.fromJson(
@@ -109,8 +110,8 @@ class _VeemCardPluginState extends State<VeemCardPlugin> {
         final error = VeemError(
           code: _decodeErrorCode(message.payload['code'] as String?),
           message: (message.payload['message'] as String?) ?? 'Unknown error',
-          details:
-              (message.payload['details'] as Map?)?.cast<String, dynamic>(),
+          details: (message.payload['details'] as Map?)
+              ?.cast<String, dynamic>(),
         );
         widget.onErrored?.call(error);
       default:
