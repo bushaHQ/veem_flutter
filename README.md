@@ -2,7 +2,7 @@
 
 Flutter SDK for [Veem Global Payments](https://developer.veem.com/).
 
-v1 wraps Veem's Web SDK in a WebView and exposes a native Flutter API. The
+Wraps Veem's Web SDK in a WebView and exposes a native Flutter API. The
 Web SDK runs inside the WebView; Flutter widgets and an imperative
 `present()` method are the public surface. Plugin updates ship from Veem's
 CDN, and PCI scope stays with Veem.
@@ -12,18 +12,41 @@ CDN, and PCI scope stays with Veem.
 | Plugin                          | v1 | Notes |
 |---------------------------------|----|-------|
 | Card                            | ✅ | This release. |
-| Bank                            | ⏳ | Undertermined. |
-| Payee                           | ⏳ | Undertermined. |
-| Beneficial Ownership Info       | ⏳ | Undertermined. |
-| Plaid                           | ⏳ | Undertermined. Bank OAuth redirects in WebView need attention. |
-| Identity Check                  | ⏳ | Undertermined. Requires camera permissions plumbing. |
+| Bank                            | ⏳ | Undetermined. |
+| Payee                           | ⏳ | Undetermined. |
+| Beneficial Ownership Info       | ⏳ | Undetermined. |
+| Plaid                           | ⏳ | Undetermined. Bank OAuth redirects in WebView need attention. |
+| Identity Check                  | ⏳ | Undetermined. Requires camera permissions plumbing. |
 
 ## Install
 
+This package is distributed via Git, not pub.dev. Add it to your app's
+`pubspec.yaml` and pin to a release tag:
+
 ```yaml
 dependencies:
-  veem_flutter: ^0.1.0
+  veem_flutter:
+    git:
+      url: https://github.com/bushaHQ/veem_flutter.git
+      ref: v0.1.0
 ```
+
+Always pin `ref:` to a tag. Pointing it at a branch (`ref: main`) means
+every `flutter pub get` can silently pull new code.
+
+## Releasing
+
+1. Bump `version:` in this package's `pubspec.yaml`.
+2. Update `CHANGELOG.md`.
+3. Commit, then tag and push:
+
+   ```sh
+   git tag v0.1.0
+   git push origin dev --tags
+   ```
+
+4. Consuming apps bump their `ref:` to the new tag and run
+   `flutter pub get`.
 
 ## Platform setup
 
