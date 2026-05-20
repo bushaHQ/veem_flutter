@@ -124,30 +124,51 @@ VeemCardPlugin(
 ```
 
 ### 4. Custom styling
-
-Pass Veem's style structure directly as a map:
-
+ 
+Style the plugin with a typed `VeemStyle`. The fastest path is to derive
+from your Material theme:
+ 
 ```dart
 CardPluginConfig(
   // ...
-  style: {
-    'typography': {
-      'fontFamily': 'Roboto',
-      'color': '#1A1A1A',
-      'fontSize': 14,
-    },
-    'button': {
-      'backgroundColor': '#0076F7',
-      'color': '#FFFFFF',
-      'borderRadius': 8,
-    },
-  },
+  style: VeemStyle.fromTheme(Theme.of(context)),
 )
 ```
-
-The full style schema is documented at
-<https://developer.veem.com/docs/card-plugin>. A typed style builder is
-planned for a later release.
+ 
+Or build one explicitly:
+ 
+```dart
+CardPluginConfig(
+  // ...
+  style: VeemStyle(
+    typography: VeemTypography(
+      fontFamily: 'Roboto',
+      color: Color(0xFF1A1A1A),
+      fontSize: 14,
+    ),
+    button: VeemButtonStyle(
+      backgroundColor: Color(0xFF0076F7),
+      color: Colors.white,
+      borderRadius: 8,
+      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    ),
+  ),
+)
+```
+ 
+Colors take Flutter `Color`s (serialized as `#RRGGBB`, alpha dropped),
+font weights take Flutter `FontWeight`s (mapped to numeric CSS weights),
+and padding takes `EdgeInsets`. Anything not yet typed can be passed via
+`VeemStyle(extra: {...})` and will be merged into the output map.
+ 
+Note on fonts: `fontFamily` must resolve in the WebView's runtime —
+system fonts or web-loaded fonts work, but custom fonts you bundle in
+your Flutter app are NOT automatically available since the WebView runs
+an isolated rendering context. If you need a brand font, host it as a
+web font and reference it by name.
+ 
+The full Veem style schema is documented at
+<https://developer.veem.com/docs/card-plugin>.
 
 ## Architecture
 

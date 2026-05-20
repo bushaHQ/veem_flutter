@@ -1,4 +1,5 @@
 import '../../core/errors.dart';
+import '../../style/veem_style.dart';
 
 /// Configuration for the Veem Card plugin.
 ///
@@ -46,10 +47,10 @@ class CardPluginConfig {
 
   /// Custom styling for the plugin UI.
   ///
-  /// For v1 this is passed through as a raw map matching the structure
-  /// documented at https://developer.veem.com/docs/card-plugin (the
-  /// `style` object). A typed builder is planned for a later version.
-  final Map<String, dynamic>? style;
+  /// Use [VeemStyle.fromTheme] to derive a style from your Material
+  /// theme, or construct one directly. The full schema is documented at
+  /// https://developer.veem.com/docs/card-plugin.
+  final VeemStyle? style;
 
   /// Serialize to the JSON shape the Web SDK expects.
   ///
@@ -65,7 +66,7 @@ class CardPluginConfig {
         'paymentOptions': [
           {'type': 'Card', 'header': ?headerText},
         ],
-        'style': ?style,
+        'style': ?style?.toJson(),
       },
     };
   }

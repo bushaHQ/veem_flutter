@@ -1,6 +1,6 @@
 /// Flutter SDK for Veem Global Payments.
 ///
-/// v1 wraps the Veem Web SDK in a WebView and exposes:
+/// Wraps the Veem Web SDK in a WebView and exposes:
 ///   - A widget API: [VeemCardPlugin] for embedding the card flow inline.
 ///   - An imperative API: [Veem.card.present] for showing it as a full-screen
 ///     modal and awaiting the result.
@@ -53,3 +53,14 @@ export 'src/plugins/card/card_models.dart'
         PaymentMethod,
         FundingMethod,
         BillingAddress;
+export 'src/style/veem_style.dart'
+    show
+        VeemStyle,
+        VeemTypography,
+        VeemHeaderStyle,
+        VeemInputStyle,
+        VeemButtonStyle,
+        VeemButtonStateStyle,
+        VeemBorder,
+        VeemTextTransform,
+        VeemBorderStyle;

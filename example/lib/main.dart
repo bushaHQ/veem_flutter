@@ -1,5 +1,3 @@
-// ignore_for_file: public_member_api_docs
-
 import 'package:flutter/material.dart';
 import 'package:veem_flutter/veem_flutter.dart';
 
@@ -53,19 +51,20 @@ class _HomeScreenState extends State<HomeScreen> {
   // In production, your backend calls Veem's search-customer-by-email
   // endpoint and returns these to your app. Hardcoded here for the
   // example only.
-  CardPluginConfig _buildConfig() {
-    return const CardPluginConfig(
+  CardPluginConfig _buildConfig(BuildContext context) {
+    return CardPluginConfig(
       accountId: 391558,
       sessionSecret: 'replace-with-session-secret-from-your-backend',
       referenceId: 'example_order_001',
-      preset: CardPreset(amount: 500, currencyCode: 'USD'),
+      preset: const CardPreset(amount: 500, currencyCode: 'USD'),
       headerText: 'Add your payment card',
+      style: VeemStyle.fromTheme(Theme.of(context)),
     );
   }
 
   Future<void> _presentModal() async {
     final result = await Veem.card
-        .present(context, config: _buildConfig(), title: 'Add card');
+        .present(context, config: _buildConfig(context), title: 'Add card');
 
     if (!mounted) return;
 
@@ -90,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _openEmbeddedScreen() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => EmbeddedExampleScreen(config: _buildConfig()),
+        builder: (ctx) => EmbeddedExampleScreen(config: _buildConfig(ctx)),
       ),
     );
   }

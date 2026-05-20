@@ -1,5 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:veem_flutter/veem_flutter.dart';
+import 'package:veem_flutter/src/style/veem_style.dart'
+    show colorToHex, fontWeightToInt;
 
 void main() {
   group('Veem.initialize', () {
@@ -91,15 +94,12 @@ void main() {
         accountId: 1,
         sessionSecret: 's',
         referenceId: 'r',
-        style: {
-          'button': {'color': '#fff'},
-        },
+        style: VeemStyle(button: VeemButtonStyle(color: Color(0xFFFFFFFF))),
       );
 
       final json = config.toJson();
-      expect(json['configuration']['style'], {
-        'button': {'color': '#fff'},
-      });
+      final style = (json['configuration'] as Map)['style'] as Map;
+      expect(style['button'], {'color': '#FFFFFF'});
     });
 
     test('does not leak clientId — that is attached by the JS bridge', () {
@@ -167,6 +167,166 @@ void main() {
 
       final inputs = UserInputs.fromJson(raw);
       expect(inputs.raw, raw);
+    });
+  });
+
+  group('VeemStyle conversion helpers', () {
+    test('colorToHex drops alpha and uppercases', () {
+      expect(colorToHex(const Color(0xFF1A1A1A)), '#1A1A1A');
+      expect(colorToHex(const Color(0x801A1A1A)), '#1A1A1A');
+      expect(colorToHex(const Color(0xFFFFFFFF)), '#FFFFFF');
+      expect(colorToHex(const Color(0xFF000000)), '#000000');
+    });
+
+    test('fontWeightToInt maps Flutter weights to CSS numeric weights', () {
+      expect(fontWeightToInt(FontWeight.w100), 100);
+      expect(fontWeightToInt(FontWeight.w400), 400);
+      expect(fontWeightToInt(FontWeight.w700), 700);
+      expect(fontWeightToInt(FontWeight.w900), 900);
+    });
+  });
+
+  group('VeemStyle.toJson', () {
+    test('serializes typography with nested error sub-style', () {
+      const style = VeemStyle(
+        typography: VeemTypography(
+          fontFamily: 'Roboto',
+          color: Color(0xFF1A1A1A),
+          weight: FontWeight.w400,
+          fontSize: 14,
+          error: VeemTypography(color: Color(0xFFB6353B), fontSize: 12),
+        ),
+      );
+
+      final json = style.toJson();
+      expect(json['typography'], {
+        'fontFamily': 'Roboto',
+        'color': '#1A1A1A',
+        'weight': 400,
+        'fontSize': 14.0,
+        'error': {'color': '#B6353B', 'fontSize': 12.0},
+      });
+    });
+
+    test('input padding emits FLAT keys (Veem schema quirk)', () {
+      const style = VeemStyle(
+        input: VeemInputStyle(padding: EdgeInsets.fromLTRB(16, 8, 16, 8)),
+      );
+
+      final input = style.toJson()['input'] as Map<String, dynamic>;
+      expect(input['paddingTop'], 8);
+      expect(input['paddingRight'], 16);
+      expect(input['paddingBottom'], 8);
+      expect(input['paddingLeft'], 16);
+      expect(input.containsKey('padding'), isFalse);
+    });
+
+    test('button padding emits NESTED object (Veem schema quirk)', () {
+      const style = VeemStyle(
+        button: VeemButtonStyle(padding: EdgeInsets.fromLTRB(24, 10, 24, 10)),
+      );
+
+      final button = style.toJson()['button'] as Map<String, dynamic>;
+      expect(button['padding'], {
+        'top': 10.0,
+        'right': 24.0,
+        'bottom': 10.0,
+        'left': 24.0,
+      });
+    });
+
+    test('button border + hover + disabled states serialize', () {
+      const style = VeemStyle(
+        button: VeemButtonStyle(
+          backgroundColor: Color(0xFF1A1A1A),
+          color: Color(0xFFFFFFFF),
+          borderRadius: 4,
+          border: VeemBorder(
+            color: Color(0xFF1A1A1A),
+            width: 1,
+            style: VeemBorderStyle.solid,
+          ),
+          hover: VeemButtonStateStyle(
+            backgroundColor: Color(0xFF333333),
+            color: Color(0xFFFFFFFF),
+          ),
+          disabled: VeemButtonStateStyle(
+            backgroundColor: Color(0xFFE0E0E0),
+            color: Color(0xFFB0B7BF),
+          ),
+        ),
+      );
+
+      final button = style.toJson()['button'] as Map<String, dynamic>;
+      expect(button['border'], {
+        'color': '#1A1A1A',
+        'width': 1.0,
+        'style': 'solid',
+      });
+      expect(button['hover'], {
+        'backgroundColor': '#333333',
+        'color': '#FFFFFF',
+      });
+      expect(button['disabled'], {
+        'backgroundColor': '#E0E0E0',
+        'color': '#B0B7BF',
+      });
+    });
+
+    test('textTransform enum serializes to CSS string', () {
+      const style = VeemStyle(
+        button: VeemButtonStyle(textTransform: VeemTextTransform.capitalize),
+      );
+      expect((style.toJson()['button'] as Map)['textTransform'], 'capitalize');
+    });
+
+    test('omits all unset fields (no nulls in output)', () {
+      const style = VeemStyle();
+      expect(style.toJson(), <String, dynamic>{});
+
+      const partial = VeemStyle(
+        button: VeemButtonStyle(color: Color(0xFFFFFFFF)),
+      );
+      final json = partial.toJson();
+      expect(json.keys, ['button']);
+      expect(json['button'], {'color': '#FFFFFF'});
+    });
+
+    test('extra fields are merged in and win on collision', () {
+      const style = VeemStyle(
+        button: VeemButtonStyle(color: Color(0xFFFFFFFF)),
+        extra: {
+          'futureKey': {'foo': 'bar'},
+          'button': {'overriddenByExtra': true},
+        },
+      );
+
+      final json = style.toJson();
+      expect(json['futureKey'], {'foo': 'bar'});
+      // extra spread runs last → button gets overwritten
+      expect(json['button'], {'overriddenByExtra': true});
+    });
+  });
+
+  group('VeemStyle.fromTheme', () {
+    test('produces a non-empty style from default ThemeData', () {
+      final theme = ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0076F7)),
+        useMaterial3: true,
+      );
+
+      final style = VeemStyle.fromTheme(theme);
+      final json = style.toJson();
+
+      expect(json.containsKey('typography'), isTrue);
+      expect(json.containsKey('header'), isTrue);
+      expect(json.containsKey('input'), isTrue);
+      expect(json.containsKey('button'), isTrue);
+
+      // Button background should match the primary color from the scheme.
+      final buttonBg = (json['button'] as Map)['backgroundColor'] as String;
+      expect(buttonBg.startsWith('#'), isTrue);
+      expect(buttonBg.length, 7);
     });
   });
 }

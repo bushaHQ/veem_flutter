@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.1
+
+### Added
+
+- Typed VeemStyle builder mirroring the Web SDK style schema,
+  with `VeemStyle.fromTheme(ThemeData)` for Material-theme-derived defaults.
+  Accepts Flutter Color, FontWeight, and EdgeInsets directly and
+  serializes to the schema's CSS values.
+
 ## 0.1.0
 
 Initial release.
