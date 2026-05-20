@@ -222,8 +222,6 @@ the next time a user opens the plugin.
 
 - **Card plugin only available.** Bank, Payee, BOI, Plaid, Identity Check coming
   in subsequent releases.
-- **Style API is untyped.** You pass the raw Veem style map. Typed builder
-  planned.
 - **No offline detection.** The Web SDK loads from a CDN; the plugin won't
   work without network, and the error surface for that case is generic
   (`VeemErrorCode.networkError`).
