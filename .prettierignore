@@ -1,0 +1,2 @@
+# Mustache-style template — Prettier mangles {{...}} placeholders into invalid JS.
+assets/web/index.html
