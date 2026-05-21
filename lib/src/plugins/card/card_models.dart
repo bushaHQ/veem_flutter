@@ -213,7 +213,11 @@ class FundingMethod {
   factory FundingMethod.fromJson(Map<String, dynamic> json) {
     return FundingMethod(
       type: (json['type'] as String?) ?? 'Card',
-      id: int.tryParse((json['id'] as String?) ?? '') ?? 0,
+      id: switch (json['id']) {
+        final String id? => int.tryParse(id) ?? 0,
+        final int id => id,
+        _ => 0,
+      },
     );
   }
 
