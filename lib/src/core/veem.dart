@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 
+import '../plugins/bank/bank_api.dart';
 import '../plugins/card/card_api.dart';
 import 'config.dart';
 import 'errors.dart';
@@ -50,6 +51,13 @@ class Veem {
   /// final result = await Veem.card.present(context, config: ...);
   /// ```
   static const CardPluginApi card = CardPluginApi();
+
+  /// Bank plugin namespace.
+  ///
+  /// ```dart
+  /// final result = await Veem.bank.present(context, config: ...);
+  /// ```
+  static const BankPluginApi bank = BankPluginApi();
 
   /// Reset SDK state. Intended for tests only.
   @visibleForTesting

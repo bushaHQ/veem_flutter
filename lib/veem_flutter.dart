@@ -53,6 +53,18 @@ export 'src/plugins/card/card_models.dart'
         PaymentMethod,
         FundingMethod,
         BillingAddress;
+export 'src/plugins/bank/bank_plugin.dart' show VeemBankPlugin;
+export 'src/plugins/bank/bank_api.dart' show BankPluginApi;
+export 'src/plugins/bank/bank_models.dart'
+    show
+        BankPluginConfig,
+        BankPreset,
+        BankPluginResult,
+        BankPluginCompleted,
+        BankPluginExited,
+        BankPluginErrored,
+        BankUserInputs,
+        BankPaymentMethod;
 export 'src/style/veem_style.dart'
     show
         VeemStyle,
