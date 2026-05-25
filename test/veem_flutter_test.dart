@@ -170,6 +170,143 @@ void main() {
     });
   });
 
+  group('BankPluginConfig.toJson', () {
+    test('emits required fields with Bank paymentOption type', () {
+      const config = BankPluginConfig(
+        accountId: 391558,
+        sessionSecret: 'secret123',
+        referenceId: 'ref_abc',
+      );
+
+      final json = config.toJson();
+      expect(json['referenceId'], 'ref_abc');
+      expect(json['configuration']['accountId'], 391558);
+      expect(json['configuration']['sessionSecret'], 'secret123');
+      expect(json['configuration']['paymentOptions'], [
+        {'type': 'Bank'},
+      ]);
+    });
+
+    test('includes preset when provided', () {
+      const config = BankPluginConfig(
+        accountId: 1,
+        sessionSecret: 's',
+        referenceId: 'r',
+        preset: BankPreset(amount: 500, currencyCode: 'USD'),
+      );
+
+      final json = config.toJson();
+      expect(json['preset'], {'amount': 500, 'currencyCode': 'USD'});
+    });
+
+    test('includes headerText in paymentOptions when provided', () {
+      const config = BankPluginConfig(
+        accountId: 1,
+        sessionSecret: 's',
+        referenceId: 'r',
+        headerText: 'Link bank account',
+      );
+
+      final json = config.toJson();
+      expect(json['configuration']['paymentOptions'], [
+        {'type': 'Bank', 'header': 'Link bank account'},
+      ]);
+    });
+
+    test('includes style when provided', () {
+      const config = BankPluginConfig(
+        accountId: 1,
+        sessionSecret: 's',
+        referenceId: 'r',
+        style: VeemStyle(button: VeemButtonStyle(color: Color(0xFFFFFFFF))),
+      );
+
+      final json = config.toJson();
+      final style = (json['configuration'] as Map)['style'] as Map;
+      expect(style['button'], {'color': '#FFFFFF'});
+    });
+
+    test('does not leak clientId — that is attached by the JS bridge', () {
+      const config = BankPluginConfig(
+        accountId: 1,
+        sessionSecret: 's',
+        referenceId: 'r',
+      );
+
+      final json = config.toJson();
+      expect(json['configuration'].containsKey('clientId'), isFalse);
+    });
+  });
+
+  group('BankUserInputs.fromJson', () {
+    test('parses full payload from Web SDK docs', () {
+      final json = <String, dynamic>{
+        'paymentMethod': {
+          'type': 'BANK',
+          'name': 'Firstname Lastname',
+          'fundingMethod': {'type': 'bank', 'id': 123},
+          'isoCountryCode': 'US',
+          'currencyCode': 'USD',
+          'bankName': 'Bank of America',
+          'routingNumber': 121000358,
+          'bankAccountNumber': '******1234',
+        },
+      };
+
+      final inputs = BankUserInputs.fromJson(json);
+      expect(inputs.paymentMethod.type, 'BANK');
+      expect(inputs.paymentMethod.name, 'Firstname Lastname');
+      expect(inputs.paymentMethod.bankName, 'Bank of America');
+      expect(inputs.paymentMethod.routingNumber, 121000358);
+      expect(inputs.paymentMethod.bankAccountNumber, '******1234');
+      expect(inputs.paymentMethod.isoCountryCode, 'US');
+      expect(inputs.paymentMethod.currencyCode, 'USD');
+      expect(inputs.paymentMethod.fundingMethod.type, 'bank');
+      expect(inputs.paymentMethod.fundingMethod.id, 123);
+    });
+
+    test('handles missing optional fields gracefully', () {
+      final inputs = BankUserInputs.fromJson({
+        'paymentMethod': {
+          'type': 'BANK',
+          'fundingMethod': {'type': 'bank', 'id': 99},
+        },
+      });
+
+      expect(inputs.paymentMethod.name, isNull);
+      expect(inputs.paymentMethod.bankName, isNull);
+      expect(inputs.paymentMethod.routingNumber, isNull);
+      expect(inputs.paymentMethod.bankAccountNumber, isNull);
+      expect(inputs.paymentMethod.isoCountryCode, isNull);
+      expect(inputs.paymentMethod.currencyCode, isNull);
+      expect(inputs.paymentMethod.fundingMethod.id, 99);
+    });
+
+    test('routingNumber parses from string as well as int', () {
+      final inputs = BankUserInputs.fromJson({
+        'paymentMethod': {
+          'type': 'BANK',
+          'routingNumber': '121000358',
+          'fundingMethod': {'type': 'bank', 'id': 1},
+        },
+      });
+      expect(inputs.paymentMethod.routingNumber, 121000358);
+    });
+
+    test('exposes raw payload for forward compatibility', () {
+      final raw = <String, dynamic>{
+        'paymentMethod': {
+          'type': 'BANK',
+          'fundingMethod': {'type': 'bank', 'id': 1},
+          'futureField': 'something Veem added later',
+        },
+      };
+
+      final inputs = BankUserInputs.fromJson(raw);
+      expect(inputs.raw, raw);
+    });
+  });
+
   group('VeemStyle conversion helpers', () {
     test('colorToHex drops alpha and uppercases', () {
       expect(colorToHex(const Color(0xFF1A1A1A)), '#1A1A1A');
